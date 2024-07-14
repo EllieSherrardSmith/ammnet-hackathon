@@ -41,7 +41,7 @@ colSums(is.na(malaria_data))
 #' is to help us understand the relationships between variables and 
 #' characteristics of our data. They are useful for quickly exploring
 #' the data and understanding the relationships, but they are not
-#' are not great for sharing in scientific publications/presentations.
+#' great for sharing in scientific publications/presentations.
 
 # One variable comparison 
 ## Histograms
@@ -142,7 +142,7 @@ ggplot(data = malaria_data, aes(x = total, y = positive)) +
 ggplot(data = malaria_data, aes(x = total, y = positive, color = location)) +
   geom_point()
 
-#' Note that this is different then defining a color directly within the geom_point,
+#' Note that this is different than defining a color directly within the geom_point,
 #' which would only apply a single color to all points.
 
 ggplot(data = malaria_data, aes(x = total, y = positive)) +
@@ -165,6 +165,14 @@ ggplot(data = malaria_data, aes(x = total, y = positive, color = location), alph
 
 ggplot(data = malaria_data, aes(x = xcoord, y = ycoord, color = location)) +
   geom_point(alpha = 0.5)
+
+#' Important things to consider are how these different functions are used to tell the 
+#' story of your data. It can be useful to think about what statistical differences you might 
+#' want to test, and try to present the data in a way that demonstrates the statistical 
+#' result. For example, is there a difference between case burden of different locations?
+#' In this example you could show the locations in different colours and use 
+#' the boxplot and jitter functions to indicate the scale and uncertainty of any 
+#' differences. There are many ways to do this.
 
 #' Challenge 3: Create ggplot2 visualizations of the mosquito_data dataset
 #'   * Are their any interesting patterns in individual variables/columns?
