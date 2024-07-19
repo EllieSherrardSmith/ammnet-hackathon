@@ -5,6 +5,10 @@ author:
   - Justin Millar 
   - Ellie Sherrard-Smith
 date: "2024-07-19"
+categories: 
+ - R
+ - Data Visualization
+ - ggplot2
 ---
 
 ## Getting Started
@@ -408,6 +412,25 @@ theme_classic()
 
 ggsave("malaria-prevalence-age-boxplot.png", width = 10, height = 6, dpi = 300)
 ```
+
+```{r}
+#| echo: false
+#| classes: preview-image
+
+ggplot(data = malaria_data, aes(x = location, y = prev, fill = location)) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.2) +
+  facet_wrap(~ ages) +
+  coord_flip() +  # flips the x and y axes
+  scale_fill_manual(values = c("#C6E0FF", "#136F63", "#E0CA3C", "#F34213", "#3E2F5B")) +
+  labs(title = "Malaria prevalence by location and age group",
+       subtitle = "Data from 2018 - 2020",
+       x = "Location",
+       y = "Prevalence",
+       fill = "Age group") +
+theme_classic()
+```
+
 
 ::: {#challenge4 .callout-tip}
 ## Challenge 4: Develop customized ggplot figures for the 'mosquito_data' dataset

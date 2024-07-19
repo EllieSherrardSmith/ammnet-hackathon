@@ -18,18 +18,39 @@ about:
 
 ## A virtual hackathon series for continual learning
 
-The AMMnet Hackathon aims to:
+A new virtual hackathon series for continual learning was developed by a collaborative effort between the Best Practices and Learning Committees.
 
-* To create a continual support space that anyone can access
-* To learn how to code and how to code better
-* To upskill people from a distance, ultimately improving all our abilities in:
-  * data handling, presentation and analysis
-  * experimental design
-  * quantitative understanding
-  * coding and problem solving
-  * transmission modelling
-* To collaborate better and more equitably
+Aims:
 
-Resources:
+-   To create a continual support space that anyone can access
+-   To learn how to code and how to code better
+-   To upskill people from a distance, ultimately improving all our abilities in:
+    -   data handling, presentation and analysis
+    -   experimental design
+    -   quantitative understanding
+    -   coding and problem solving
+    -   transmission modelling
+-   To collaborate better and more equitably
 
-* [AMMnet Hackathon Github](https://github.com/AMMnet/ammnet-hackathon)
+Structure:
+
+-   A theme is selected by the committee
+-   Experts sign up to support specific themed areas
+-   A participant submits a coding related problem for consideration within a specific theme
+-   Experts select 2 – 3 problems per session on the chosen theme, and prepare some solutions to present
+
+Experts will work with the Hackathon Committee for a half a day to consider the problems submitted and draft solutions. Once solutions are ready for a hackathon audience, they will present these during a 2-hour training session. Once the 2-hour training session concludes, experts will summarize the session, adapt solutions, and upload them to the shared space. A recording of the training will also be provided.
+
+If you are an expert in the following topic areas, we need your help!
+
+-   Data handling
+-   Visualisation 
+-   Descriptive statistics
+-   Power calculations
+-   Regression statistics
+-   Mechanistic modelling
+-   Bayesian statistics
+
+Why volunteer as an expert? The best way to learn is to teach. You’ll also have an opportunity to network and gain professional visibility within the AMMnet community.
+
+To volunteer as an expert, please complete the form at the [link here](https://docs.google.com/forms/d/e/1FAIpQLSc49mZiA0RpTLe_2dVpfFVB_J0ASe7wHincmqZTZwh-xG_HGg/viewform?usp=sharing).
