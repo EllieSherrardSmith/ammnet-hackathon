@@ -46,9 +46,9 @@ mosquito_data  <- read_csv("data/mosq_mock.csv")
 ```{r load-local}
 #| echo: false
 # Load example data
-malaria_data   <- read_csv("01_data-vis/data/mockdata_cases.csv", 
-  col_types = cols())
-mosquito_data  <- read_csv("01_data-vis/data/mosq_mock.csv", col_types = cols())
+url <- "https://raw.githubusercontent.com/AMMnet/AMMnet-Hackathon/main/01_data-vis/data/"
+malaria_data   <- read_csv(paste0(url, "mockdata_cases.csv"), col_types = cols())
+mosquito_data  <- read_csv(paste0(url, "mosq_mock.csv"), col_types = cols())
 ```
 
 The two datasets we will use are `mockdata_cases.csv` and `mosq_mock.csv`, which are mock example datasets that should be similar to malaria case surviellance and mosquito field collection data, respectively. In the following sections we will use the `mockdata_cases.csv` to introduce concepts of data visualization in R. The `mosq_mock.csv` dataset is used in the challenge sections.

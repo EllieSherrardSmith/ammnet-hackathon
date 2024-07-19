@@ -1,0 +1,19 @@
+project:
+  type: website
+
+website:
+  title: "AMMnet Hackathon"
+  navbar:
+    right:
+      - about.qmd
+      - icon: github
+        href: https://github.com/justinmillar/ammnet-hackathon
+      - icon: twitter
+        href: https://x.com/AMMnetwork
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+
+
+
