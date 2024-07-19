@@ -1,5 +1,5 @@
 ---
-title: "AMMNet Hackathon"
+title: "Welcome to AMMNet Hackathon Blog!"
 listing:
   contents: posts
   sort: "date desc"
@@ -9,6 +9,7 @@ listing:
   filter-ui: false
 page-layout: full
 title-block-banner: true
+comments: false
 ---
 
 

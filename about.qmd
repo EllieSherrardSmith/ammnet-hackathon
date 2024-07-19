@@ -1,8 +1,8 @@
 ---
 title: "About"
-image: profile.jpg
+image: profile.png
 about:
-  template: jolla
+  template: trestles
   links:
     - icon: twitter
       text: Twitter
@@ -16,4 +16,20 @@ about:
 
 ---
 
-About this blog
+## A virtual hackathon series for continual learning
+
+The AMMnet Hackathon aims to:
+
+* To create a continual support space that anyone can access
+* To learn how to code and how to code better
+* To upskill people from a distance, ultimately improving all our abilities in:
+  * data handling, presentation and analysis
+  * experimental design
+  * quantitative understanding
+  * coding and problem solving
+  * transmission modelling
+* To collaborate better and more equitably
+
+Resources:
+
+* [AMMnet Hackathon Github](https://github.com/AMMnet/ammnet-hackathon)

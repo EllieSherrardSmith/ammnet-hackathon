@@ -7,13 +7,17 @@ website:
     right:
       - about.qmd
       - icon: github
-        href: https://github.com/justinmillar/ammnet-hackathon
+        href: https://github.com/AMMnet/ammnet-hackathon
       - icon: twitter
         href: https://x.com/AMMnetwork
+
 format:
   html:
-    theme: cosmo
-    css: styles.css
+    theme:
+    - flatly
+    - custom.scss
 
+execute:
+  freeze: auto
 
 
