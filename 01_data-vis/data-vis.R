@@ -73,7 +73,7 @@ plot(malaria_data$month, malaria_data$prev)
 boxplot(malaria_data$prev ~ malaria_data$month) 
 boxplot(malaria_data$prev ~ malaria_data$location) 
 
-# Challenge 2: Make some exploratory visualizations of the mosquito_data dataset
+# Challenge 2: Explore the structure and summary of the mosquito_data dataset
 #   * Are their any interesting patterns in individual variables/columns?
 #   * Are there any relationships between variables/columns?
 
