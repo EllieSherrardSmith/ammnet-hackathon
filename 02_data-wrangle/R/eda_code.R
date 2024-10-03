@@ -165,9 +165,74 @@ evolution_plot <- ggplot2::ggplot(data=data_use_ordered,
 
 evolution_plot
 
+# Observation: Prevalence graph with vertical lines per month and year, means
+#              we have several subgroups for prevalence data, we plot facets for levels of `age_group`
+evolution_plot_ages <- ggplot2::ggplot(data=data_use_ordered,
+                                  mapping=aes(x=month,
+                                              y=prev_updated,
+                                              group=location,
+                                              colour=location))+
+  ggplot2::geom_line(lwd=1.1)+
+  ggplot2::facet_wrap(age_group~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Prevalence")+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::scale_y_continuous(breaks=seq(from=0,
+                                         to=0.7,
+                                         by=0.1))
+
+evolution_plot_ages
+# Observation: Some improvements, but we still have vertical lines, maybe we have 
+#              other group variables. Let's only look at those rows that have more than
+#              one entry per location, month, year, age_group
+
+data_use_ordered%>%
+  group_by(location,month,year,age_group)%>%
+  tally()%>%
+  filter(n>1)%>%
+  left_join(data_use_ordered)
+# Observation: OK, we see that within one location there are several prevalence data
+#              points, they differ by the `xcoord` and `ycoord`. In order to plot 
+#              by location, we could average across `xcoord` and `ycoord` witin
+#              each location; maybe those are duplicated recordings, since `xcoord` and `ycoord`
+#              are very close?
+
+data_use_ordered%>%
+  group_by(location,month,year,age_group)%>%
+  summarize(prev_updated_mean=mean(prev_updated),
+            prev_updated_min=min(prev_updated),
+            prev_updated_max=max(prev_updated))%>%
+  ggplot2::ggplot(mapping=aes(x=month,
+                              y=prev_updated_mean,
+                              file=location,
+                              group=location,
+                              colour=location))+
+  ggplot2::geom_line(lwd=1.1)+
+  ggplot2::facet_wrap(age_group~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Prevalence")+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::scale_y_continuous(breaks=seq(from=0,
+                                         to=0.7,
+                                         by=0.1))
+
 # Observation: Prevalence widely variable throughout they year across the locations
 #              on average, wonderland affected by high prevalence while oz has the
 #              lowest prevalence
+
+
+
+
 
 
 # Need to check (not just prevalence) but count of cases and total vulnerable
