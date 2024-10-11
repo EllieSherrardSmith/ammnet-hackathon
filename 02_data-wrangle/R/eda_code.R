@@ -261,8 +261,44 @@ mordor_stacked_bar_graph <- ggplot2::ggplot(data=data_use_ordered_long%>%
                                                     ggplot2::ylab("Count")
 
 mordor_stacked_bar_graph
-                                                  
-  
-               
+# Observation: stacked bar graph adds positive and total counts, better to show 
+#              them side by side as positive counts are a subset of the total counts
+
+mordor_dodged_bar_graph <- ggplot2::ggplot(data=data_use_ordered_long%>%
+                                              dplyr::filter(location=="mordor"),
+                                            mapping=aes(x=month,
+                                                        y=counts,
+                                                        fill=Outcome))+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::geom_bar(position="dodge", stat="identity")+
+  ggplot2::facet_wrap(~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Count")
+
+mordor_dodged_bar_graph
+
+
+####################################################################################
+##### The mosquitoe HLC data
+####################################################################################
+mosq_data <- readr::read_csv("data/mosq_mock1.csv")
+
+## Let's check the sanity of this data set
+mosq_data %>%
+  map( function(x) table(x) )
+
+## The columns `Village` and `Method` seem to have some data entry errors
+mosq_data<-mosq_data%>%
+  mutate(Method=ifelse(Method=="ALC","HLC",Method),
+         Village=ifelse(Village=="naernia","narnia",Village))
+
+## What are the data types of each column?
+mosq_data %>%
+  map(typeof)
 
 

@@ -1,0 +1,453 @@
+---
+title: "Introduction to Data Cleaning in R"
+format: html
+author:   
+  - Justin Millar 
+  - Ellie Sherrard-Smith
+  - Christian Selinger
+date: "2024-10-11"
+categories: 
+ - R
+ - Data Visualization
+ - ggplot2
+ - Data cleaning
+---
+
+## Getting Started
+
+Before you begin, you might want to create a new project in RStudio. This can be done by clicking on the "New Project" button in the upper right corner of the RStudio window. You can then name the project and choose a directory to save it in.
+
+Next, we will load the `tidyverse` package. This package provides a set of useful functions for data manipulation and visualization. We will use the `ggplot2` package to create plots in the later section of this tutorial.
+
+
+```{r load-packages}
+#| warning: false
+#| message: false
+# load packages
+library(tidyverse)
+```
+
+Next, let's download the two example datasets we will use in this tutorial. These are available in the [AMMnet Hackathon GitHub repository](https://github.com/AMMnet/AMMnet-Hackathon). 
+
+I suggest creating a `data` folder inside your R project, then we can download the two example datasets so that they are saved to your computer.
+
+```{r load-data}
+#| warning: false
+#| message: false
+#| eval: false
+# Create a data folder
+dir.create("data")
+
+# Download example data
+url <- "https://raw.githubusercontent.com/AMMnet/AMMnet-Hackathon/main/02_data-wrangle/data/"
+
+download.file(paste0(url, "mockdata_cases1.csv"), destfile = "data/mockdata_cases1.csv")
+download.file(paste0(url, "mosq_mock1.csv"), destfile = "data/mosq_mock1.csv")
+
+# Load example data
+data_cases   <- read_csv("data/mockdata_cases1.csv")
+mosq_data  <- read_csv("data/mosq_mock1.csv")
+```
+
+```{r load-local}
+#| echo: false
+# Load example data
+url <- "https://raw.githubusercontent.com/AMMnet/AMMnet-Hackathon/main/02_data-wrangle/data/"
+data_cases   <- read_csv(paste0(url, "mockdata_cases1.csv"), col_types = cols())
+mosq_data  <- read_csv(paste0(url, "mosq_mock1.csv"), col_types = cols())
+```
+
+The two datasets we will use are `mockdata_cases1.csv` and `mosq_mock1.csv`, which are mock example datasets that should be similar to malaria case surveillance and mosquito field collection data, respectively. In the following sections we will use the `mockdata_cases1.csv` and `mosq_mock1.csv` to introduce concepts of data cleaning and characterization in R. 
+
+## 1.  Check the data for potential errors
+
+### Prevalence is a fraction defined [0,1]
+
+Note: Prevalence of 0 or 1 while not statistically erroneous, need checking for accuracy
+What observations have errors?
+```{r data-prevalence}
+#| warning: false
+#| message: false
+#| eval: true
+# Erroneous values for prevalence
+data_cases%>%
+   dplyr::filter(prev <= 0 | prev >= 1)
+```
+### Defensive programming
+
+Note: The use of "::" enables us to call a function from a specific R package
+       I have had instances where if "stats" base R package was called first, 
+       the filter function if not specified with the R package fails
+```{r data-statsfilter}
+#| warning: false
+#| message: false
+#| eval: false
+# Erroneous values for prevalence
+data_cases%>%
+    stats::filter(prev < 0 | prev > 1) 
+```
+
+### We correct the two prevalence by re-calculating 
+
+Good practice to leave the original data intact (advantage of R over Stata)
+
+```{r data-prevalence-update}
+#| warning: false
+#| message: false
+#| eval: true
+# Update erroneous values for prevalence
+data_prev <- data_cases%>%
+                       dplyr::mutate(prev_updated=positive/total)
+```
+We have a case erroneously reported with a negative value.
+
+What are your options?
+
+1. Never delete data
+
+2. Query and have data management team make the necessary investigations and make a correction
+
+```{r data-prevalence-update-filter}
+#| warning: false
+#| message: false
+#| eval: true
+data_prev%>%
+    dplyr::filter(prev_updated <= 0 | prev_updated >= 1)
+```
+
+For now (in order to proceed with this demo), we drop the problematic observation.
+
+Why is this not working?
+```{r data-prevalence_filterwrong}
+#| warning: false
+#| message: false
+#| eval: true
+# Filter erroneous values for prevalence, wrong way
+data_use <- data_prev%>%
+              dplyr::filter (prev_updated >= 0 | prev_updated <= 1)
+```
+Why is this working?
+```{r data-prevalence_filterright}
+#| warning: false
+#| message: false
+#| eval: true
+# Filter erroneous values for prevalence
+data_use <- data_prev%>%
+             dplyr::filter (prev_updated >= 0 )%>%
+              dplyr::filter (prev_updated <= 1)
+
+data_use%>%
+       dplyr::filter(prev_updated <= 0 | prev_updated >= 1)
+```
+
+
+## 2.  Look at summary statistics
+### Summary stats by location (across all time points)
+
+```{r data-prevalence_summary}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics 
+
+data_use%>%
+   dplyr::group_by(location)%>%
+     dplyr::summarise(nobs=n(),
+                      mean_prev=mean(prev_updated),
+                      min_prev=min(prev_updated),
+                      max_prev=max(prev_updated))
+```
+
+### Summary stats by location and year (across all time points)
+
+Table getting longer. Might be too cumbersome to add checks by month and age group
+Note: point of query - why just had 3 measurements in 2020? 
+
+```{r data-prevalence_summary_location}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics by location
+data_use%>%
+  dplyr::group_by(location, year)%>%
+  dplyr::summarise(nobs=n(),
+                   mean_prev=mean(prev_updated),
+                   min_prev=min(prev_updated),
+                   max_prev=max(prev_updated))
+```
+
+::: {#challenge1 .callout-tip}
+## Challenge 1: Explore the `data_prev` and `data_use` datasets
+* Create a table showing the number of data entries per age group and location for each of them!
+* Which age group and location have observations removed?
+:::
+
+
+Slightly more advanced. Use of lists (not scope of the course but there is a point here).
+```{r data-prevalence_summary_list}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics by location
+data_use_list <- data_use%>%
+                  dplyr::group_split(location)
+```
+Or use the `purrr` library:
+```{r data-prevalence_summary_list_purrr}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics by location, map summary function
+library(purrr)
+
+data_use_age_summary <- purrr::map(.x=seq(length(data_use_list)),
+                                   .f=function(x){
+                                     data_use_list[[x]]%>%
+                                       dplyr::group_by(location,year,ages)%>%
+                                       dplyr::summarise(nobs=n(),
+                                                        mean_prev=mean(prev_updated),
+                                                        min_prev=min(prev_updated),
+                                                        max_prev=max(prev_updated)) 
+                                     
+                                   })
+```  
+
+### Now let's focus on the first list object (mordor)                         
+We know pregnant mothers, children <5 are most vulnerable.
+
+Output (ages) isn't ordered as we would want (chronologically).
+```{r data-mordor_prev}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics by location
+
+data_mordor <- data_use_age_summary[[1]]
+
+data_mordor
+```
+
+### How to proceed?
+
+```{r data-mordor_prev_age}
+#| warning: false
+#| message: false
+#| eval: true
+# Summary statistics with age groups
+age_order <- c("under_5","5_to_14","15_above")
+
+data_use_ordered <- data_use
+
+data_use_ordered$age_group <- factor(data_use$ages, levels =age_order)
+
+data_mordor_reordered <- data_use_ordered%>%
+                           dplyr::group_by(location, year,age_group)%>%
+                            dplyr::summarise(nobs=n(),
+                                             mean_prev=mean(prev_updated),
+                                             min_prev=min(prev_updated),
+                                             max_prev=max(prev_updated))%>%
+                                 dplyr::filter(location=="mordor")
+```
+Let's compare the two
+```{r data-mordor_prev_comp}
+#| warning: false
+#| message: false
+#| eval: true
+# Compare for Mordor
+
+data_mordor
+data_mordor_reordered
+
+```
+
+
+
+## 3.  Use of graphs
+### We need to assess the evolution of prevalence for all regions by month
+
+```{r data-evoplot}
+#| warning: false
+#| message: false
+#| eval: true
+#Plotting evolution over time
+evolution_plot <- ggplot2::ggplot(data=data_use_ordered,
+                                  mapping=aes(x=month,
+                                              y=prev_updated,
+                                              group=location,
+                                              colour=location))+
+                        ggplot2::geom_line(lwd=1.1)+
+                           ggplot2::facet_wrap(~year)+ 
+                            ggplot2::theme_bw()+
+                             ggplot2::xlab("Month of the Year")+
+                               ggplot2::ylab("Prevalence")+
+                                ggplot2::scale_x_discrete(limits=factor(1:12),
+                                                          labels=c("J","F","M",
+                                                                   "A","M","J",
+                                                                   "J","A","S",
+                                                                   "O","N","D"))+
+                                   ggplot2::scale_y_continuous(breaks=seq(from=0,
+                                                                          to=0.7,
+                                                                          by=0.1))
+
+evolution_plot
+```
+
+### Observation: Prevalence graph with vertical lines per month and year, means we have several subgroups for prevalence data, we plot facets for levels of `age_group`
+```{r data-evoplot-fix1}
+#| warning: false
+#| message: false
+#| eval: true
+#Plotting evolution over time, fix 1
+evolution_plot_ages <- ggplot2::ggplot(data=data_use_ordered,
+                                  mapping=aes(x=month,
+                                              y=prev_updated,
+                                              group=location,
+                                              colour=location))+
+  ggplot2::geom_line(lwd=1.1)+
+  ggplot2::facet_wrap(age_group~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Prevalence")+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::scale_y_continuous(breaks=seq(from=0,
+                                         to=0.7,
+                                         by=0.1))
+
+evolution_plot_ages
+```
+### Observation: 
+Some improvements, but we still have vertical lines, maybe we have other group variables. Let's only look at those rows that have more than one entry per location, month, year, age_group
+
+```{r data-evoplot-fix2}
+#| warning: false
+#| message: false
+#| eval: true
+#Plotting evolution over time, fix 2
+
+data_use_ordered%>%
+  group_by(location,month,year,age_group)%>%
+  tally()%>%
+  filter(n>1)%>%
+  left_join(data_use_ordered)
+```
+### Observation: 
+OK, we see that within one location there are several prevalence data points, they differ by the `xcoord` and `ycoord`. In order to plot by location, we could average across `xcoord` and `ycoord` witin each location; maybe those are duplicated recordings, since `xcoord` and `ycoord` are very close?
+
+```{r data-evoplot-fix3}
+#| warning: false
+#| message: false
+#| eval: true
+#Plotting evolution over time, fix 3
+
+data_use_ordered%>%
+  group_by(location,month,year,age_group)%>%
+  summarize(prev_updated_mean=mean(prev_updated),
+            prev_updated_min=min(prev_updated),
+            prev_updated_max=max(prev_updated))%>%
+  ggplot2::ggplot(mapping=aes(x=month,
+                              y=prev_updated_mean,
+                              file=location,
+                              group=location,
+                              colour=location))+
+  ggplot2::geom_line(lwd=1.1)+
+  ggplot2::facet_wrap(age_group~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Prevalence")+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::scale_y_continuous(breaks=seq(from=0,
+                                         to=0.7,
+                                         by=0.1))
+```
+### Observation: 
+Prevalence widely variable throughout they year across the locations on average, wonderland affected by high prevalence while oz has the lowest prevalence
+
+
+# Need to check (not just prevalence) but count of cases and total vulnerable
+```{r data-casecount}
+#| warning: false
+#| message: false
+#| eval: true
+#Check case count
+
+data_use_ordered_long <- tidyr::pivot_longer(data=data_use_ordered,
+                                             cols=c("positive","total"),
+                                             names_to="Outcome",
+                                             values_to="counts")
+
+
+mordor_stacked_bar_graph <- ggplot2::ggplot(data=data_use_ordered_long%>%
+                                                       dplyr::filter(location=="mordor"),
+                                                 mapping=aes(x=month,
+                                                             y=counts,
+                                                             fill=Outcome))+
+                                       ggplot2::scale_x_discrete(limits=factor(1:12),
+                                                                 labels=c("J","F","M",
+                                                                          "A","M","J",
+                                                                          "J","A","S",
+                                                                          "O","N","D"))+
+                                           ggplot2::geom_bar(position="stack", stat="identity")+
+                                             ggplot2::facet_wrap(~year)+ 
+                                               ggplot2::theme_bw()+
+                                                 ggplot2::xlab("Month of the Year")+
+                                                    ggplot2::ylab("Count")
+
+mordor_stacked_bar_graph
+```
+### Observation: 
+stacked bar graph adds positive and total counts, better to show  them side by side as positive counts are a subset of the total counts
+
+```{r data-casecount-dodgedbar}
+#| warning: false
+#| message: false
+#| eval: true
+#Case count, bargraph dodge
+
+mordor_dodged_bar_graph <- ggplot2::ggplot(data=data_use_ordered_long%>%
+                                              dplyr::filter(location=="mordor"),
+                                            mapping=aes(x=month,
+                                                        y=counts,
+                                                        fill=Outcome))+
+  ggplot2::scale_x_discrete(limits=factor(1:12),
+                            labels=c("J","F","M",
+                                     "A","M","J",
+                                     "J","A","S",
+                                     "O","N","D"))+
+  ggplot2::geom_bar(position="dodge", stat="identity")+
+  ggplot2::facet_wrap(~year)+ 
+  ggplot2::theme_bw()+
+  ggplot2::xlab("Month of the Year")+
+  ggplot2::ylab("Count")
+
+mordor_dodged_bar_graph
+```
+
+## The mosquito data set
+
+Let's take a look at the `mosq_data`dataset.
+
+We check the sanity of this data set by displaying a table of recorded values per column:
+```{r data-mosqdata-table}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data %>%
+  map( function(x) table(x) )
+```
+The columns `Village` and `Method` seem to have some data entry errors. We need to correct for that.
+```{r data-mosqdata-correct}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data<-mosq_data%>%
+  mutate(Method=ifelse(Method=="ALC","HLC",Method),
+         Village=ifelse(Village=="naernia","narnia",Village))
+```
