@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Data Cleaning in R"
+title: "Introduction to Data Wrangling in R"
 format: html
 author:   
   - Justin Millar 
@@ -8,10 +8,48 @@ author:
 date: "2024-10-11"
 categories: 
  - R
- - Data Visualization
- - ggplot2
  - Data cleaning
+ - Data validation
 ---
+
+## Introduction
+
+### What do we mean with data wrangling?
+
+The Cambridge dictionary gives several meanings to the verb [wrangle](https://dictionary.cambridge.org/dictionary/english/wrangle):
+
+1. to argue with someone about something, especially for a long time
+
+2. to take care of, control, or move animals, especially large animals such as cows or horses (*mainly American English*)
+
+3. to move a person or thing somewhere, usually with difficulty or using force 
+
+4. to take care of or **deal with something, usually when this is difficult**
+
+
+### Data Wrangling
+
+By data wrangling, we mean here the process of checking and correcting quality and 
+integrity of data relevant to malaria modeling, prior to any further analysis. 
+This is also known as data validation.
+
+**Data validation** involves checking various aspects of your dataset, such as missing values, 
+data types, outliers, and adherence to specific rules or constraints. 
+
+Validating our data helps maintain its **quality and integrity**, ensuring that any 
+analyses or decisions made based on the data are robust and reliable.
+
+
+### Why Validate Data?
+
+Ensure Data **Integrity**: Validating data helps identify and rectify errors, ensuring the integrity of the dataset.
+
+Improve Analysis **Accuracy**: Clean and validated data leads to more accurate analysis and modeling results.
+
+Compliance and **Standards**: Data validation ensures that the data conforms to predefined rules, standards, or regulatory requirements.
+
+Error **Prevention**: Early detection of errors can prevent downstream issues and save time in troubleshooting.
+
 
 ## Getting Started
 
@@ -61,9 +99,10 @@ The two datasets we will use are `mockdata_cases1.csv` and `mosq_mock1.csv`, whi
 
 ## 1.  Check the data for potential errors
 
-### Prevalence is a fraction defined [0,1]
+### Prevalence is a fraction defined in [0,1]
 
-Note: Prevalence of 0 or 1 while not statistically erroneous, need checking for accuracy
+**Note:** Prevalence of 0 or 1 while not statistically erroneous, need checking for accuracy.
+
 What observations have errors?
 ```{r data-prevalence}
 #| warning: false
@@ -73,11 +112,14 @@ What observations have errors?
 data_cases%>%
    dplyr::filter(prev <= 0 | prev >= 1)
 ```
+**Comment:** We have two rows with nonsensical `prev` data `25.3`and `-0.455`, and one row with zero `prev` at a given month. 
+
+
 ### Defensive programming
 
-Note: The use of "::" enables us to call a function from a specific R package
+**Note:** The use of "::" enables us to call a function from a specific R package
        I have had instances where if "stats" base R package was called first, 
-       the filter function if not specified with the R package fails
+       the filter function if not specified with the R package fails.
 ```{r data-statsfilter}
 #| warning: false
 #| message: false
@@ -140,6 +182,38 @@ data_use%>%
        dplyr::filter(prev_updated <= 0 | prev_updated >= 1)
 ```
 
+### Schemas
+
+To prevent nonsensical data appearing in your data, you should define
+a **schema** that comes along with your recorded data. A schema is a document that 
+states rules for data types and values or ranges to be expected in a particular 
+column of your data frame. 
+
+E.g. for prevalence, we know that this should be a real number between 
+zero and one.
+
+The R package `validate` can be used to create a schema for your data frame:
+
+```{r data-validation-schema}
+#| warning: false
+#| message: false
+#| eval: true
+# Filter erroneous values for prevalence
+library(validate)
+schema <- validate::validator(prev >= 0,
+                   prev <= 1,
+                   positive >= 0)
+
+out   <- validate::confront(data_cases, schema)
+summary(out)
+```
+Using the schema for the columns `prev` and `positive`, we could have readily detected 
+the three problematic entries. For more details, you can have a look into the
+[vignette](https://cran.r-project.org/web/packages/validate/vignettes/cookbook.html) 
+of the `validate` package.
+
+**Note:** Next time when you receive data from your collaborators, you might want to
+ask them for the associated schema file (e.g. YAML format). Good luck!
 
 ## 2.  Look at summary statistics
 ### Summary stats by location (across all time points)
@@ -292,7 +366,7 @@ evolution_plot <- ggplot2::ggplot(data=data_use_ordered,
 evolution_plot
 ```
 
-### Observation: Prevalence graph with vertical lines per month and year, means we have several subgroups for prevalence data, we plot facets for levels of `age_group`
+**Observation:** Prevalence graph with vertical lines per month and year, means we have several subgroups for prevalence data, we plot facets for levels of `age_group`
 ```{r data-evoplot-fix1}
 #| warning: false
 #| message: false
@@ -319,7 +393,7 @@ evolution_plot_ages <- ggplot2::ggplot(data=data_use_ordered,
 
 evolution_plot_ages
 ```
-### Observation: 
+**Observation**: 
 Some improvements, but we still have vertical lines, maybe we have other group variables. Let's only look at those rows that have more than one entry per location, month, year, age_group
 
 ```{r data-evoplot-fix2}
@@ -334,7 +408,7 @@ data_use_ordered%>%
   filter(n>1)%>%
   left_join(data_use_ordered)
 ```
-### Observation: 
+**Observation:** 
 OK, we see that within one location there are several prevalence data points, they differ by the `xcoord` and `ycoord`. In order to plot by location, we could average across `xcoord` and `ycoord` witin each location; maybe those are duplicated recordings, since `xcoord` and `ycoord` are very close?
 
 ```{r data-evoplot-fix3}
@@ -367,7 +441,7 @@ data_use_ordered%>%
                                          to=0.7,
                                          by=0.1))
 ```
-### Observation: 
+**Observation:** 
 Prevalence widely variable throughout they year across the locations on average, wonderland affected by high prevalence while oz has the lowest prevalence
 
 
@@ -402,8 +476,8 @@ mordor_stacked_bar_graph <- ggplot2::ggplot(data=data_use_ordered_long%>%
 
 mordor_stacked_bar_graph
 ```
-### Observation: 
-stacked bar graph adds positive and total counts, better to show  them side by side as positive counts are a subset of the total counts
+**Observation:** 
+Stacked bar graph adds positive and total counts, better to show  them side by side as positive counts are a subset of the total counts. This is a specified by the argument `position="dodge"` in the `geom_bar` geometry of `ggplot2`.
 
 ```{r data-casecount-dodgedbar}
 #| warning: false
@@ -442,6 +516,29 @@ We check the sanity of this data set by displaying a table of recorded values pe
 mosq_data %>%
   map( function(x) table(x) )
 ```
+Looks like we have some typos in the names for `Method` and `Village`.
+
+::: {#challenge2 .callout-tip}
+## Challenge 2: Using schemas for the mosquito data set
+
+* Create a *schema* that provides rules for the strings (i.e. words) to be expected 
+in the columns `Method` and `Village`.
+* Use the syntax from [here](#data-validation-schema)
+:::
+
+```{r data-mosqdata-valid}
+#| warning: false
+#| message: false
+#| eval: true
+schema <- validate::validator(Method%in%c("HLC"),
+                              Village%in%c("narnia"))
+
+out   <- validate::confront(mosq_data, schema)
+summary(out)
+```
+
+
+
 The columns `Village` and `Method` seem to have some data entry errors. We need to correct for that.
 ```{r data-mosqdata-correct}
 #| warning: false
@@ -450,4 +547,90 @@ The columns `Village` and `Method` seem to have some data entry errors. We need 
 mosq_data<-mosq_data%>%
   mutate(Method=ifelse(Method=="ALC","HLC",Method),
          Village=ifelse(Village=="naernia","narnia",Village))
+```
+
+It looks like the several columns concern *Anopheles Gambiae* population sizes. Let's change the column names using `rename` from the `tidyverse` package.
+```{r data-mosqdata-names}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data%>%
+  rename("AnophelesGambiae.male"="ag.Male",
+         "AnophelesGambiae.unfed"="Ag.unfed",
+         "AnophelesGambiae.halffed"="Ag.halffed",
+         "AnophelesGambiae.fed"="Ag.fed",
+         "AnophelesGambiae.gravid"="Ag.grsgr")->mosq_data
+```
+
+Seems like the `tot.gamb` should count the the total number of Anopheles 
+Gambiae populations. Let's check:
+```{r data-mosqdata-total}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data%>%
+  mutate(AnophelesGambiae_total=AnophelesGambiae.male+AnophelesGambiae.unfed+AnophelesGambiae.halffed+AnophelesGambiae.fed+AnophelesGambiae.gravid)->mosq_data
+
+mosq_data%>%
+  filter(AnophelesGambiae_total!=tot.gamb)%>%select(AnophelesGambiae_total,tot.gamb)
+```
+OK, so 11 out of 104 rows have this discrepancy. Let's keep rather `Anopheles.total`,
+since it was calculated from the data.
+
+Since the status of the Anopheles is mutually exclusive in the HLC data, we can draw
+a stacked bar chart, with the bar color defined by the status. To produce such 
+a graph efficiently in `ggplot2`, we need to pivot the table.
+
+Here in particular we want to switch from a wide format to a long format  table 
+in order to obtain a column describing the status of the Anopheles mosquitoes.
+We will use in particular the `names_sep`argument of the `pivot_longer` function
+to separate e.g. the column name `AnophelesGambiae.male` and use `male`as level
+in a new column called `status`. The same goes for other column names. 
+
+Setting the grouping variable to `session`, `Village`, `Compound.ID`, `Method`, 
+`Location`, `hour`, `AnophelesGambiae_total` will help to keep those variables 
+in the long format table.
+
+```{r data-mosqdata-pivot}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data%>%
+  group_by(session,Village,Compound.ID,Method,Location,hour,AnophelesGambiae_total)%>%
+  select(contains("AnophelesGambiae."))%>%
+  pivot_longer(cols=contains("AnophelesGambiae."),names_sep="AnophelesGambiae.",names_to=c(NA,"status"),values_to = "AnophelesGambiae")->mosq_data_gamb_wide
+
+mosq_data_gamb_wide%>%
+  ggplot()+
+  geom_bar(aes(x=hour,y=AnophelesGambiae,fill=status),position="stack",stat="identity")+
+  scale_x_discrete(guide = guide_axis(angle = 60))
+```
+**Observation**: We had several values for `Compound.ID`. The `geom_bar` geometry
+is automatically adding them up in the graph. We can use `facet_wrap`to see those
+strata:
+```{r data-mosqdata-pivot-line}
+#| warning: false
+#| message: false
+#| eval: true
+
+mosq_data_gamb_wide%>%
+  ggplot()+
+  geom_bar(aes(x=hour,y=AnophelesGambiae,fill=status),position="stack",stat="identity")+
+  scale_x_discrete(guide = guide_axis(angle = 60))+
+  facet_wrap(~Compound.ID)
+```
+On we can also use our variable `Anopheles_total` and plot is as a line graph on top
+of the bar graph:
+
+```{r data-mosqdata-pivot-disagg}
+#| warning: false
+#| message: false
+#| eval: true
+mosq_data_gamb_wide%>%
+  mutate(grouping=paste0(Compound.ID,Location,session))%>%
+  ggplot()+
+  geom_bar(aes(x=hour,y=AnophelesGambiae,fill=status),position="stack",stat="identity")+
+  geom_line(aes(x=hour,y=AnophelesGambiae_total,group=grouping))+
+  scale_x_discrete(guide = guide_axis(angle = 60))+
+  facet_wrap(~Compound.ID+session+Location)
 ```

@@ -63,6 +63,14 @@ data_use <- data_prev%>%
 data_use%>%
        dplyr::filter(prev_updated <= 0 | prev_updated >= 1)
 
+# schemas, using the validate R package
+schema <- validate::validator(prev >= 0,
+                   prev <= 1,
+                   positive >= 0)
+
+out   <- confront(data_cases, schema)
+summary(out)
+
 ####################################################################################
 ##### 2.  Look at summary statistics
 ####################################################################################
@@ -288,9 +296,18 @@ mordor_dodged_bar_graph
 ####################################################################################
 mosq_data <- readr::read_csv("data/mosq_mock1.csv")
 
+
 ## Let's check the sanity of this data set
 mosq_data %>%
   map( function(x) table(x) )
+
+## Writing a schema for Method and Village
+library(validate)
+schema <- validate::validator(Method%in%c("HLC"),
+                              Village%in%c("narnia"))
+
+out   <- validate::confront(mosq_data, schema)
+summary(out)
 
 ## The columns `Village` and `Method` seem to have some data entry errors
 mosq_data<-mosq_data%>%
@@ -301,4 +318,48 @@ mosq_data<-mosq_data%>%
 mosq_data %>%
   map(typeof)
 
+## Let's make `session`, `Village`, `Compound.ID`, `Method`, `Location` and `hour` into a factorial variable?
+mosq_data<-mosq_data%>%
+  mutate(across(c(session,Village,Compound.ID,Method,Location,hour),as.factor))
 
+## Looks like  several columns concern Anopheles Gambiae population sizes. Let's change the column names.
+mosq_data%>%
+  rename("AnophelesGambiae.male"="ag.Male",
+         "AnophelesGambiae.unfed"="Ag.unfed",
+         "AnophelesGambiae.halffed"="Ag.halffed",
+         "AnophelesGambiae.fed"="Ag.fed",
+         "AnophelesGambiae.gravid"="Ag.grsgr")->mosq_data
+
+### Seems like the `tot.gamb`should count the the total number of Anopheles Gambiae populations.
+mosq_data%>%
+  mutate(AnophelesGambiae_total=AnophelesGambiae.male+AnophelesGambiae.unfed+AnophelesGambiae.halffed+AnophelesGambiae.fed+AnophelesGambiae.gravid)->mosq_data
+
+
+
+## We also pivot the table in long format to obtain a column describing the status of the Anopheles mosquitoes
+
+mosq_data%>%
+  group_by(session,Village,Compound.ID,Method,Location,hour,AnophelesGambiae_total)%>%
+  select(contains("AnophelesGambiae."))%>%
+  pivot_longer(cols=contains("AnophelesGambiae."),names_sep="AnophelesGambiae.",names_to=c(NA,"status"),values_to = "AnophelesGambiae")->mosq_data_gamb_wide
+
+### What observations of total Anopheles populations do we have per hour across strata?
+mosq_data%>%
+  group_by(hour)%>%
+  filter(AnophelesGambiae_total==0)
+  
+
+
+mosq_data_gamb_wide%>%
+  ggplot()+
+  geom_bar(aes(x=hour,y=AnophelesGambiae,fill=status),position="stack",stat="identity")+
+  scale_x_discrete(guide = guide_axis(angle = 60))+
+  facet_wrap(~Compound.ID)
+
+mosq_data_gamb_wide%>%
+  mutate(grouping=paste0(Compound.ID,Location,session))%>%
+  ggplot()+
+  geom_bar(aes(x=hour,y=AnophelesGambiae,fill=status),position="stack",stat="identity")+
+  geom_line(aes(x=hour,y=AnophelesGambiae_total,group=grouping))+
+  scale_x_discrete(guide = guide_axis(angle = 60))+
+  facet_wrap(~Compound.ID+session+Location)
