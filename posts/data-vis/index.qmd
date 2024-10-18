@@ -1,5 +1,5 @@
 ---
-title: "Introduction to Data Visualization in R"
+title: "Live Session 1: Introduction to Data Visualization in R"
 format: html
 author:   
   - Justin Millar 
@@ -9,7 +9,12 @@ categories:
  - R
  - Data Visualization
  - ggplot2
+ - Live session
 ---
+
+This tutorial introduces you to data visualization in R. We will learn how to develop an understanding of our data before visualization, making quick exploratory visualizations using base R functions, and creating various plots using the `ggplot2` package. You'll learn how to customize and enhance your visualizations for clear data communication. By the end, you'll have the skills to create plots to effectively present your data insights.
+
+{{< video https://www.youtube.com/embed/TBxNFfqTB68 >}}
 
 ## Getting Started
 
@@ -444,5 +449,3 @@ theme_classic()
 CHALLENGE 1: Create a figure showing how the Anopheles gambiae total counts vary each day and by location.
 
 CHALLENGE 2: Create a figure showing the hourly Anopheles gambiae total counts each hour.
-
-## Conclusion and Resources

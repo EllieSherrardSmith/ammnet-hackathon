@@ -1,17 +1,24 @@
 ---
-title: "Introduction to Data Wrangling in R"
+title: "Live Session 2: Introduction to Data Wrangling in R"
 format: html
-author:   
-  - Justin Millar 
-  - Ellie Sherrard-Smith
+author: 
+  - Lazaro Mwandigha  
   - Christian Selinger
-  - Lazaro Mwandigha
+  - Ellie Sherrard-Smith
+  - Justin Millar
 date: "2024-10-14"
 categories: 
  - R
  - Data cleaning
  - Data validation
+ - Live session
 ---
+
+::: {.callout-tip title="Before you start"}
+All of the raw materials, including the [R code](https://github.com/AMMnet/ammnet-hackathon/tree/main/02_data-wrangle/R) and [data](https://github.com/AMMnet/ammnet-hackathon/tree/main/02_data-wrangle/data), are available in the [Github repository](https://github.com/AMMnet/ammnet-hackathon/tree/main/02_data-wrangle).
+
+We will be using the `tidyverse` and `validate` packages in this tutorial. You may need to install them if you do not have them already. To install, run the following command in your R console: `install.packages("tidyverse", "validate")`. Note that the `tidyverse` package is large and may take a few minutes to install.
+:::
 
 ## Introduction
 
