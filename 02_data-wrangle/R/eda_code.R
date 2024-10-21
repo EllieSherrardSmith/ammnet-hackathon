@@ -68,7 +68,7 @@ schema <- validate::validator(prev >= 0,
                    prev <= 1,
                    positive >= 0)
 
-out   <- confront(data_cases, schema)
+out   <- validate::confront(data_cases, schema)
 summary(out)
 
 ####################################################################################
